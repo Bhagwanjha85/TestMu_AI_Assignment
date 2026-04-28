@@ -359,7 +359,16 @@ LT_USERNAME=your_username LT_ACCESS_KEY=your_key npx playwright test
 >  Tests will now run on LambdaTest's real cloud browsers — visible in dashboard with **video recordings, screenshots, and logs**
 
 ## Output 
+### Terminal Output
 <img src="Screenshot 2026-04-28 212625.png" />
+
+### Lamda Cloud preview 1(Iphone):
+<img src="Screenshot 2026-04-28 214828.png" />
+
+### Lamda cloud preview 2(Galaxy):
+<img src="Screenshot 2026-04-28 214847.png" /> 
+
+
 
 ### Note: Both tests cases passes in 36.3s using Lamdatest cloud. whereas iphone in 18.3s and Galaxy in 11.9s .
 
