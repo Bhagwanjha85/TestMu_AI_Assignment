@@ -287,9 +287,9 @@ npx playwright show-report
                │                                               │
         Price: ₹89,900                                Price: $81,893
                │                                               │
-        Add to Cart                                    Add to Cart  
+        Add to Cart                                      Add to Cart  
                │                                               │
-         PASS (42.6s)                               ✅ PASS (19.4s)
+         PASS (42.6s)                                    PASS (19.4s)
                │                                               │
                └───────────────────────┬───────────────────────┘
                                        │
@@ -306,7 +306,7 @@ npx playwright show-report
 > Go to [🔗 lambdatest.com](https://www.lambdatest.com) and create a free account.
 
 ### Step 2 — Get Credentials
-> Find your **Username** and **Access Key** from your LambdaTest Profile → Settings.
+> Find your **Username** and **Access Key** from your LambdaTest Profile → Account Settings--> Password and security--> find your user name and access kay.
 
 ### Step 3 — Update `playwright.config.js`
 
@@ -314,10 +314,19 @@ npx playwright show-report
 const LT_USERNAME = process.env.LT_USERNAME || 'YOUR_LT_USERNAME';
 const LT_ACCESS_KEY = process.env.LT_ACCESS_KEY || 'YOUR_LT_ACCESS_KEY';
 
-module.exports = {
+export default defineConfig({
   testDir: './tests',
-  workers: 2,
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: 0,
+  workers: process.env.CI ? 1 : 2,
+  reporter: 'list',
+  timeout: 120000,
+  
   use: {
+    trace: 'on-first-retry',
+    actionTimeout: 30000,
+    viewport: { width: 1280, height: 720 },
     connectOptions: {
       wsEndpoint: `wss://cdp.lambdatest.com/playwright?capabilities=${encodeURIComponent(JSON.stringify({
         browserName: 'Chrome',
@@ -331,8 +340,14 @@ module.exports = {
         }
       }))}`
     }
-  }
-};
+  },
+
+  projects: [
+    {
+      name: 'lambdatest-chrome',
+    },
+  ],
+});
 ```
 
 ### Step 4 — Run on Cloud
@@ -341,41 +356,37 @@ module.exports = {
 LT_USERNAME=your_username LT_ACCESS_KEY=your_key npx playwright test
 ```
 
-> 🎯 Tests will now run on LambdaTest's real cloud browsers — visible in your dashboard with **video recordings, screenshots, and logs!**
+>  Tests will now run on LambdaTest's real cloud browsers — visible in dashboard with **video recordings, screenshots, and logs**
+
+## Output 
+<img src="Screenshot 2026-04-28 212625.png" />
+
+### Note: Both tests cases passes in 36.3s using Lamdatest cloud. whereas iphone in 18.3s and Galaxy in 11.9s .
 
 ---
 
-## ⚠️ Known Limitations
+##  Known Limitations
 
 | Issue | Description | Impact |
 |:---|:---|:---:|
-| 🌍 **Amazon.in Location Popup** | Amazon India may show a location selector on first visit | Low |
-| 💰 **Dynamic Pricing** | Live prices change with each run | Expected |
-| 🔢 **First Result Dependency** | Always clicks the first search result | Low |
-| 🤖 **CAPTCHA / Bot Detection** | Amazon may occasionally show a CAPTCHA | Rare |
+|  **Amazon.in Location Popup** | Amazon India may show a location selector on first visit | Low |
+|  **Dynamic Pricing** | Live prices change with each run | Expected |
+| **First Result Dependency** | Always clicks the first search result | Low |
+|  **CAPTCHA / Bot Detection** | Amazon may occasionally show a CAPTCHA | Rare |
 
 ---
 
 <div align="center">
 
-## 👤 Author
+##  Submitted by : Bhagwan Ji Jha
 
-**Bhagwan Ji Jha**
 
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/YOUR_USERNAME)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/YOUR_PROFILE)
 
 <br/>
 
 *Submitted for:*
-**Customer Engineering Intern — TestMu AI (formerly LambdaTest)**
+**Customer Engineering Intern — TestMu AI**
 
 <br/>
-
----
-
-<img src="https://img.shields.io/badge/Made%20with-❤️%20%26%20Playwright-FF9900?style=for-the-badge"/>
-
-*"Automate everything. Break nothing. Ship fast."*
 
 </div>
