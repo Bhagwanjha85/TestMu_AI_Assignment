@@ -121,47 +121,41 @@ test.describe.configure({ mode: 'parallel' });
 ```
 
 ```
-Worker 1 ──────────────────────────────────► iPhone (India)  ✅ 40.7s
-Worker 2 ──────────────► Galaxy (US)  ✅ 13.6s
-         ◄──────────────────────────────────────────────────►
-                        Total Time: 43.2s
+Worker 1 ──────────────► iPhone (India)   42.6s
+Worker 2 ──────────────► Galaxy (US)  19.4s
+         _______________________________________________
+                        Total Time: 47.6s
 ```
 
-> 💡 Without parallel execution, total time would be ~54s. With parallel: **43.2s** — both tests run simultaneously!
+> Without parallel execution, total time would be ~1m. With parallel: **47.6s** — both tests run simultaneously!
 
 ---
 
-## 📄 Full Test Code
+## Full Test Code
 
 ```javascript
 const { test, expect } = require('@playwright/test');
 
-// ⚡ Enable Parallel Execution
 test.describe.configure({ mode: 'parallel' });
 
 async function searchAndAddToCart(page, url, searchTerm, itemName, currencySymbol = '$') {
-  console.log(`\n🚀 Starting Test Case: ${itemName} Search and Add to Cart`);
+  console.log(`\n Starting Test Case: ${itemName} Search and Add to Cart`);
   console.log('='.repeat(60));
   
   try {
-    // 🌐 Navigate to Amazon
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 });
     
-    // 🔍 Search for product
     await page.waitForSelector('#twotabsearchtextbox', { timeout: 30000 });
     await page.fill('#twotabsearchtextbox', searchTerm);
     await page.keyboard.press('Enter');
     
-    // 📋 Wait for results
     await page.waitForSelector('[data-component-type="s-search-result"]', { timeout: 30000 });
-    console.log(`✅ Search results loaded for ${itemName}`);
+    console.log(` Search results loaded for ${itemName}`);
     
-    // 🖱️ Click first product
     await page.locator('[data-component-type="s-search-result"] .a-link-normal').first().click();
     await page.waitForLoadState('domcontentloaded');
-    console.log('✅ Product page loaded');
+    console.log(' Product page loaded');
     
-    // 💰 Get price — try multiple selectors
     let price = '';
     try {
       const priceWhole = page.locator('.a-price-whole').first();
@@ -175,91 +169,57 @@ async function searchAndAddToCart(page, url, searchTerm, itemName, currencySymbo
         price = 'Price not found';
       }
     }
-    // 🖨️ Print price to console
-    console.log(`📱 ${itemName} Price: ${currencySymbol}` + (price ? price.trim() : 'Unknown'));
+    console.log(` ${itemName} Price: ${currencySymbol}` + (price ? price.trim() : 'Unknown'));
     
-    // 🛒 Add to cart
     try {
       await page.waitForSelector('#add-to-cart-button, #add-to-cart-button-ubb, [data-csa-c-type="addToCart"]', { timeout: 10000 });
       await page.click('#add-to-cart-button');
-      console.log(`✅ ${itemName} added to cart successfully!`);
+      console.log(` ${itemName} added to cart successfully!`);
     } catch {
+      // Try alternative add to cart button
       await page.click('button[name="submit.addToCart"], input[name="submit.addToCart"]');
-      console.log(`✅ ${itemName} added to cart (alternative button)!`);
+      console.log(` ${itemName} added to cart (alternative button)!`);
     }
     
-    // ✔️ Verify cart count
+    // Verify cart
     await page.waitForTimeout(2000);
     const cartCount = await page.locator('#nav-cart-count').textContent();
-    console.log('🛒 Cart items: ' + cartCount);
+    console.log(' Cart items: ' + cartCount);
     console.log('='.repeat(60));
-    console.log(`✅ Test Case ${itemName} COMPLETED SUCCESSFULLY!\n`);
+    console.log(` Test Case ${itemName} COMPLETED SUCCESSFULLY!\n`);
     
   } catch (error) {
-    console.log(`❌ Test Case ${itemName} FAILED:`, error.message);
+    console.log(` Test Case ${itemName} FAILED:`, error.message);
     console.log('='.repeat(60));
     throw error;
   }
 }
 
-// ✅ Test Case 1: iPhone on Amazon India
+
+// Problem : when I used Amazon.com as URL, Its open Iphone 17 pro 1st of the search list . those Iphone 17 pro is not deliver in India (my location), so I am not able to access Add to cart button these reason, my script can't goes proceed to next step , I use Amazon.in.
+// Test Case 1 
 test('Test Case 1: iPhone (India)', async ({ page }) => {
   await searchAndAddToCart(page, 'https://www.amazon.in', 'iPhone', 'iPhone', '₹');
 });
 
-// ✅ Test Case 2: Galaxy on Amazon US
+// Test Case 2  : All country 
 test('Test Case 2: Galaxy (US)', async ({ page }) => {
   await searchAndAddToCart(page, 'https://www.amazon.com', 'Samsung Galaxy', 'Galaxy', '$');
 });
 ```
+<br>
 
----
+## Console Output (Actual Terminal Results)
 
-## 🖥️ Console Output (Actual Terminal Results)
+<img src="Screenshot 2026-04-28 200410.png"/>
 
-```bash
-PS C:\Users\BHAGWANJHA\testmu-assignment> npx playwright test
 
-Running 2 tests using 2 workers
-
-     1 [chromium] › tests\amazon.spec.js:71:1 › Test Case 2: Galaxy (US)
-     2 [chromium] › tests\amazon.spec.js:66:1 › Test Case 1: iPhone (India)
-
-🚀 Starting Test Case: Galaxy Search and Add to Cart
-============================================================
-🚀 Starting Test Case: iPhone Search and Add to Cart
-============================================================
-✅ Search results loaded for Galaxy
-✅ Product page loaded
-📱 Galaxy Price: $81,893.
-✅ Galaxy added to cart successfully!
-🛒 Cart items: 1
-============================================================
-✅ Test Case Galaxy COMPLETED SUCCESSFULLY!
-
-  ✓  1 [chromium] › amazon.spec.js:71:1 › Test Case 2: Galaxy (US) (13.6s)
-
-✅ Search results loaded for iPhone
-✅ Product page loaded
-📱 iPhone Price: ₹89,900
-✅ iPhone added to cart (alternative button)!
-🛒 Cart items: 1
-============================================================
-✅ Test Case iPhone COMPLETED SUCCESSFULLY!
-
-  ✓  2 [chromium] › amazon.spec.js:66:1 › Test Case 1: iPhone (India) (40.7s)
-
-  2 passed (43.2s)
-```
-
----
-
-## 🚀 How to Run
+## How to Run
 
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/testmu-assignment.git
+git clone https://github.com/Bhagwanjha85/testmu-assignment.git
 cd testmu-assignment
 ```
 
@@ -273,39 +233,39 @@ npx playwright install chromium
 ### Step 3 — Run the Tests
 
 ```bash
-# ▶️ Run both tests in parallel (default)
+#  Run both tests in parallel (default)
 npx playwright test
 
-# 👁️ Run with visible browser window
+#  Run with visible browser window
 npx playwright test --headed
 
-# 🍎 Run only iPhone test
+#  Run only iPhone test
 npx playwright test --grep "iPhone"
 
-# 📱 Run only Galaxy test
+#  Run only Galaxy test
 npx playwright test --grep "Galaxy"
 
-# 📊 View HTML test report
+#  View HTML test report
 npx playwright show-report
 ```
 
 ---
 
-## 📊 Test Results Summary
+## Test Results Summary
 
 <div align="center">
 
 | Test | Browser | Duration | Price Found | Cart Added | Result |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| 🍎 **TC-1: iPhone (India)** | Chromium | 40.7s | ₹89,900 | ✅ Yes | 🟢 **PASS** |
-| 📱 **TC-2: Galaxy (US)** | Chromium | 13.6s | $81,893 | ✅ Yes | 🟢 **PASS** |
-| ⚡ **Parallel Execution** | 2 Workers | 43.2s total | — | — | 🟢 **ACTIVE** |
+|  **TC-1: iPhone (India)** | Chromium | 42.6s | ₹89,900 | ✅ Yes |  **PASS** |
+|  **TC-2: Galaxy (US)** | Chromium | 19.4s | $81,893 | ✅ Yes |  **PASS** |
+|  **Parallel Execution** | 2 Workers | 47.6s total | — | — |  **ACTIVE** |
 
 </div>
 
 ---
 
-## 📈 Execution Flow Diagram
+## Execution Flow Diagram
 
 ```
                         ╔══════════════════════════════╗
@@ -316,31 +276,31 @@ npx playwright show-report
                │                                               │
        ┌───────▼──────────┐                       ┌───────────▼──────────┐
        │   Worker 1        │                       │    Worker 2           │
-       │  🍎 iPhone Test   │                       │  📱 Galaxy Test       │
+       │  iPhone Test   │                       │   Galaxy Test       │
        └───────┬──────────┘                       └───────────┬──────────┘
                │                                               │
-       🌐 amazon.in                                    🌐 amazon.com
+       open amazon.in/amazon.com                          open amazon.com
                │                                               │
-       🔍 Search "iPhone"                          🔍 Search "Samsung Galaxy"
+        Search "iPhone"                             Search "Samsung Galaxy"
                │                                               │
-       🖱️ Click 1st Result                          🖱️ Click 1st Result
+        Click 1st Result                              Click 1st Result
                │                                               │
-       💰 Price: ₹89,900                            💰 Price: $81,893
+        Price: ₹89,900                                Price: $81,893
                │                                               │
-       🛒 Add to Cart ✅                             🛒 Add to Cart ✅
+        Add to Cart                                    Add to Cart  
                │                                               │
-       ✅ PASS (40.7s)                               ✅ PASS (13.6s)
+         PASS (42.6s)                               ✅ PASS (19.4s)
                │                                               │
                └───────────────────────┬───────────────────────┘
                                        │
                         ╔══════════════▼═══════════════╗
-                        ║   2 passed  |  Total: 43.2s   ║
+                        ║  2 passed  |  Total: 47.6s   ║
                         ╚══════════════════════════════╝
 ```
 
 ---
 
-## ☁️ Bonus: Run on LambdaTest Cloud
+##  Bonus: Run on LambdaTest Cloud
 
 ### Step 1 — Sign Up
 > Go to [🔗 lambdatest.com](https://www.lambdatest.com) and create a free account.
